@@ -73,10 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       final ProfileRepository profileRepository = ProfileRepository(client);
       await profileRepository.upsertProfile(
-        ProfileModel(
-          id: user.id,
-          username: nameController.text.trim(),
-        ),
+        ProfileModel(id: user.id, username: nameController.text.trim()),
       );
 
       if (!mounted) return;
@@ -88,18 +85,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       showMessage('Could not create account.');
     } finally {
-      if (!mounted) return;
-
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

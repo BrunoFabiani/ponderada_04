@@ -86,14 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final GameRepository repository = GameRepository(
-        supabaseClient: client,
-      );
+      final GameRepository repository = GameRepository(supabaseClient: client);
 
-      await repository.saveFreeGame(
-        userId: user.id,
-        game: game,
-      );
+      await repository.saveFreeGame(userId: user.id, game: game);
 
       await NotificationService.instance.showGameSavedNotification(
         gameId: game.id,
@@ -114,18 +109,18 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       showMessage('Could not save this game.');
     } finally {
-      if (!mounted) return;
-
-      setState(() {
-        savingGameIds.remove(game.id);
-      });
+      if (mounted) {
+        setState(() {
+          savingGameIds.remove(game.id);
+        });
+      }
     }
   }
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,13 +9,15 @@ class StorageService {
 
   Future<String> uploadAvatar({
     required String userId,
-    required File file,
+    required Uint8List imageBytes,
   }) async {
     final path = '$userId/avatar.jpg';
 
-    await _client.storage.from('avatars').upload(
+    await _client.storage
+        .from('avatars')
+        .uploadBinary(
           path,
-          file,
+          imageBytes,
           fileOptions: const FileOptions(upsert: true),
         );
 
