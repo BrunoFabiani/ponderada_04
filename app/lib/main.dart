@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/game_finder_app.dart';
 import 'core/supabase_config.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,8 @@ Future<void> main() async {
       publishableKey: SupabaseConfig.anonKey,
     );
   }
+
+  await NotificationService.instance.initialize();
 
   runApp(const GameFinderApp());
 }

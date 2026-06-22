@@ -6,6 +6,7 @@ import '../../core/supabase_config.dart';
 import '../../models/game_model.dart';
 import '../../repositories/game_repository.dart';
 import '../../services/freetogame_api_service.dart';
+import '../../services/notification_service.dart';
 import '../../widgets/app_shell.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/game_card.dart';
@@ -92,6 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
       await repository.saveFreeGame(
         userId: user.id,
         game: game,
+      );
+
+      await NotificationService.instance.showGameSavedNotification(
+        gameId: game.id,
+        gameTitle: game.title,
       );
 
       if (!mounted) return;
