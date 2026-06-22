@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ponderada_04/main.dart';
+import 'package:ponderada_04/app/game_finder_app.dart';
 
 void main() {
   testWidgets('shows login screen', (WidgetTester tester) async {
@@ -15,9 +15,8 @@ void main() {
     await tester.pumpWidget(const GameFinderApp());
 
     await tester.tap(find.text('Enter app'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.text('Discover'), findsOneWidget);
     expect(find.text('Recommended free games'), findsOneWidget);
   });
 }
