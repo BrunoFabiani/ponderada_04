@@ -44,22 +44,20 @@ export default {
         return jsonResponse({ error: "Prompt is required." }, 400);
       }
 
-      const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
-      if (!openAiApiKey) {
-        return jsonResponse({ error: "OpenAI API key is not configured." }, 500);
+      const groqApiKey = Deno.env.get("GROQ_API_KEY");
+      if (!groqApiKey) {
+        return jsonResponse({ error: "Groq API key is not configured." }, 500);
       }
 
       const candidates = await fetchCandidateGames();
       const recommendations = await recommendGames({
-        openAiApiKey,
-        model: Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini",
+        groqApiKey,
+        model: Deno.env.get("GROQ_MODEL") ?? "openai/gpt-oss-20b",
         prompt: prompt.trim(),
         candidates,
       });
 
-      const gamesById = new Map(
-        candidates.map((game) => [game.id, game]),
-      );
+      const gamesById = new Map(candidates.map((game) => [game.id, game]));
 
       const results = recommendations
         .map((recommendation) => {
@@ -101,12 +99,12 @@ async function fetchCandidateGames(): Promise<FreeToGameGame[]> {
 }
 
 async function recommendGames({
-  openAiApiKey,
+  groqApiKey,
   model,
   prompt,
   candidates,
 }: {
-  openAiApiKey: string;
+  groqApiKey: string;
   model: string;
   prompt: string;
   candidates: FreeToGameGame[];
@@ -119,55 +117,58 @@ async function recommendGames({
     short_description: game.short_description,
   }));
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openAiApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      input: [
-        {
-          role: "system",
-          content:
-            "You recommend free-to-play games. Only recommend games from the candidate list. Do not invent games. Return exactly 3 recommendations.",
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            user_preference: prompt,
-            candidate_games: compactGames,
-          }),
-        },
-      ],
-      text: {
-        format: {
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${groqApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You recommend free-to-play games. Only recommend games from the candidate list. Do not invent games. Return exactly 3 recommendations.",
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              user_preference: prompt,
+              candidate_games: compactGames,
+            }),
+          },
+        ],
+        response_format: {
           type: "json_schema",
-          name: "game_recommendations",
-          strict: true,
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            required: ["recommendations"],
-            properties: {
-              recommendations: {
-                type: "array",
-                minItems: 3,
-                maxItems: 3,
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  required: ["game_id", "reason"],
-                  properties: {
-                    game_id: {
-                      type: "integer",
-                      description: "The id of a game from candidate_games.",
-                    },
-                    reason: {
-                      type: "string",
-                      description:
-                        "A short reason explaining why this game fits the user preference.",
+          json_schema: {
+            name: "game_recommendations",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["recommendations"],
+              properties: {
+                recommendations: {
+                  type: "array",
+                  minItems: 3,
+                  maxItems: 3,
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    required: ["game_id", "reason"],
+                    properties: {
+                      game_id: {
+                        type: "integer",
+                        description: "The id of a game from candidate_games.",
+                      },
+                      reason: {
+                        type: "string",
+                        description:
+                          "A short reason explaining why this game fits the user preference.",
+                      },
                     },
                   },
                 },
@@ -175,20 +176,20 @@ async function recommendGames({
             },
           },
         },
-      },
-    }),
-  });
+      }),
+    },
+  );
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`OpenAI request failed: ${response.status} ${errorBody}`);
+    throw new Error(`Groq request failed: ${response.status} ${errorBody}`);
   }
 
   const data = await response.json();
-  const outputText = getOutputText(data);
+  const outputText = getChatCompletionText(data);
 
   if (typeof outputText !== "string") {
-    throw new Error("OpenAI response did not include output_text.");
+    throw new Error("Groq response did not include message content.");
   }
 
   const parsed = JSON.parse(outputText) as {
@@ -198,34 +199,21 @@ async function recommendGames({
   return parsed.recommendations;
 }
 
-function getOutputText(data: unknown): string | null {
+function getChatCompletionText(data: unknown): string | null {
   if (typeof data !== "object" || data === null) {
     return null;
   }
 
   const responseData = data as {
-    output_text?: unknown;
-    output?: Array<{
-      content?: Array<{
-        text?: unknown;
-      }>;
+    choices?: Array<{
+      message?: {
+        content?: unknown;
+      };
     }>;
   };
 
-  if (typeof responseData.output_text === "string") {
-    return responseData.output_text;
-  }
-
-  const textParts = responseData.output
-    ?.flatMap((item) => item.content ?? [])
-    .map((content) => content.text)
-    .filter((text): text is string => typeof text === "string");
-
-  if (textParts == null || textParts.length === 0) {
-    return null;
-  }
-
-  return textParts.join("");
+  const content = responseData.choices?.[0]?.message?.content;
+  return typeof content === "string" ? content : null;
 }
 
 function jsonResponse(body: unknown, status = 200): Response {
