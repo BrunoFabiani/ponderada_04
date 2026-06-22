@@ -40,7 +40,7 @@ export default {
     try {
       const { prompt } = await req.json();
 
-      if (typeof prompt !== "string" || prompt.trim().isEmpty) {
+      if (typeof prompt !== "string" || prompt.trim().length === 0) {
         return jsonResponse({ error: "Prompt is required." }, 400);
       }
 
@@ -52,6 +52,7 @@ export default {
       const candidates = await fetchCandidateGames();
       const recommendations = await recommendGames({
         openAiApiKey,
+        model: Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini",
         prompt: prompt.trim(),
         candidates,
       });
@@ -75,7 +76,13 @@ export default {
       return jsonResponse({ recommendations: results });
     } catch (error) {
       console.error(error);
-      return jsonResponse({ error: "Could not recommend games." }, 500);
+      return jsonResponse(
+        {
+          error: "Could not recommend games.",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
     }
   }),
 };
@@ -95,10 +102,12 @@ async function fetchCandidateGames(): Promise<FreeToGameGame[]> {
 
 async function recommendGames({
   openAiApiKey,
+  model,
   prompt,
   candidates,
 }: {
   openAiApiKey: string;
+  model: string;
   prompt: string;
   candidates: FreeToGameGame[];
 }): Promise<AiRecommendation[]> {
@@ -117,7 +126,7 @@ async function recommendGames({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-5.4-mini",
+      model,
       input: [
         {
           role: "system",
@@ -176,7 +185,7 @@ async function recommendGames({
   }
 
   const data = await response.json();
-  const outputText = data.output_text;
+  const outputText = getOutputText(data);
 
   if (typeof outputText !== "string") {
     throw new Error("OpenAI response did not include output_text.");
@@ -187,6 +196,36 @@ async function recommendGames({
   };
 
   return parsed.recommendations;
+}
+
+function getOutputText(data: unknown): string | null {
+  if (typeof data !== "object" || data === null) {
+    return null;
+  }
+
+  const responseData = data as {
+    output_text?: unknown;
+    output?: Array<{
+      content?: Array<{
+        text?: unknown;
+      }>;
+    }>;
+  };
+
+  if (typeof responseData.output_text === "string") {
+    return responseData.output_text;
+  }
+
+  const textParts = responseData.output
+    ?.flatMap((item) => item.content ?? [])
+    .map((content) => content.text)
+    .filter((text): text is string => typeof text === "string");
+
+  if (textParts == null || textParts.length === 0) {
+    return null;
+  }
+
+  return textParts.join("");
 }
 
 function jsonResponse(body: unknown, status = 200): Response {

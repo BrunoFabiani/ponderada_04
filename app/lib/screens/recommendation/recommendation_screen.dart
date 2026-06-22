@@ -68,7 +68,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       if (!mounted) return;
 
       setState(() {
-        errorMessage = 'Could not get recommendations. Try again.';
+        errorMessage = 'Could not get recommendations: $error';
       });
     } finally {
       if (mounted) {

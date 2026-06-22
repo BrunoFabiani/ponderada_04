@@ -13,8 +13,16 @@ class AiRecommendationService {
       body: {'prompt': prompt},
     );
 
-    final data = response.data as Map<String, dynamic>;
-    final recommendations = data['recommendations'] as List<dynamic>;
+    final rawData = response.data;
+    if (rawData is! Map<String, dynamic>) {
+      throw Exception('Invalid recommendation response.');
+    }
+
+    if (rawData['error'] != null) {
+      throw Exception(rawData['details'] ?? rawData['error']);
+    }
+
+    final recommendations = rawData['recommendations'] as List<dynamic>;
 
     return recommendations
         .map(
