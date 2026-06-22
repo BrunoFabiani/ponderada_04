@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app/app_routes.dart';
+import '../../core/supabase_config.dart';
 import '../../models/game_model.dart';
+import '../../repositories/game_repository.dart';
 import '../../services/freetogame_api_service.dart';
 import '../../widgets/app_shell.dart';
 import '../../widgets/empty_state.dart';
@@ -25,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? errorMessage;
   String selectedPlatform = 'all';
   String selectedCategory = 'all';
+  final Set<int> savingGameIds = {};
 
   @override
   void initState() {
@@ -59,6 +63,63 @@ class _HomeScreenState extends State<HomeScreen> {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> saveGame(GameModel game) async {
+    if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
+      showMessage('Configure Supabase before saving games.');
+      return;
+    }
+
+    final SupabaseClient client = Supabase.instance.client;
+    final User? user = client.auth.currentUser;
+
+    if (user == null) {
+      showMessage('Create an account or login before saving games.');
+      Navigator.pushNamed(context, AppRoutes.login);
+      return;
+    }
+
+    setState(() {
+      savingGameIds.add(game.id);
+    });
+
+    try {
+      final GameRepository repository = GameRepository(
+        supabaseClient: client,
+      );
+
+      await repository.saveFreeGame(
+        userId: user.id,
+        game: game,
+      );
+
+      if (!mounted) return;
+      showMessage('${game.title} was saved.');
+    } on PostgrestException catch (error) {
+      if (!mounted) return;
+
+      if (error.code == '23505') {
+        showMessage('This game is already saved.');
+      } else {
+        showMessage('Could not save this game.');
+      }
+    } catch (error) {
+      if (!mounted) return;
+      showMessage('Could not save this game.');
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        savingGameIds.remove(game.id);
+      });
+    }
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -126,6 +187,10 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.only(bottom: 12),
           child: GameCard(
             game: game,
+            isSaving: savingGameIds.contains(game.id),
+            onSavePressed: () {
+              saveGame(game);
+            },
             onTap: () {
               Navigator.pushNamed(context, AppRoutes.recommendation);
             },

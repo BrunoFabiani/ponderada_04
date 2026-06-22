@@ -392,6 +392,49 @@ Interpretation:
 
 Before making future Dart/Flutter edits, consult the Firelink pages if the topic is Dart/Flutter syntax, widgets, state, navigation or project organization.
 
+## Code Style and Architecture Adjustment
+
+The user observed that the current Flutter code can look too AI-generated or too polished/abstract for a student assignment.
+
+Future changes should make the app feel more like a human student project based on the Firelink Flutter material:
+
+- Keep code simple and direct.
+- Avoid adding architecture layers before they are useful.
+- Prefer readable screen code over overly generic reusable components.
+- Avoid making every small UI piece a separate abstraction unless it clearly helps.
+- Use natural, app-specific names instead of template-like names where possible.
+- Keep comments short and practical, only when they explain a real decision.
+- Do not make the code look like a production architecture demo.
+
+Important decision for the Discover/Home screen:
+
+```text
+Keep calling the FreeToGame API directly from HomeScreen through FreeToGameApiService.
+```
+
+Reason:
+
+- FreeToGame does not require a secret API key.
+- The Discover screen only needs public game data.
+- Calling the API directly is easier to understand for the assignment.
+- Adding `GameRepository` between HomeScreen and FreeToGameApiService makes this specific flow look unnecessarily abstract right now.
+
+Recommended current Discover flow:
+
+```text
+HomeScreen
+  -> FreeToGameApiService
+  -> FreeToGame /api/games
+  -> GameModel list
+  -> GameCard
+```
+
+Use `GameRepository` mainly for Supabase-related game actions, such as:
+
+- saving a game to the user's list;
+- loading saved games;
+- caching/upserting game data in the `games` table if needed.
+
 ## Important Collaboration Preference
 
 The user asked:

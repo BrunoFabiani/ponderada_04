@@ -3,10 +3,18 @@ import 'package:flutter/material.dart';
 import '../models/game_model.dart';
 
 class GameCard extends StatelessWidget {
-  const GameCard({super.key, required this.game, this.onTap});
+  const GameCard({
+    super.key,
+    required this.game,
+    this.onTap,
+    this.onSavePressed,
+    this.isSaving = false,
+  });
 
   final GameModel game;
   final VoidCallback? onTap;
+  final VoidCallback? onSavePressed;
+  final bool isSaving;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +56,25 @@ class GameCard extends StatelessWidget {
                         _InfoChip(label: game.platform!),
                     ],
                   ),
+                  if (onSavePressed != null) ...[
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: FilledButton.icon(
+                        onPressed: isSaving ? null : onSavePressed,
+                        icon: isSaving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.bookmark_add_outlined),
+                        label: const Text('Save'),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
