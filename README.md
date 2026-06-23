@@ -98,4 +98,51 @@ Os jogos recomendados também podem ser salvos e compartilhados.
 
 A tela **Perfil** mostra informações do usuário e permite tirar uma foto usando a câmera do celular. Essa foto é enviada para o Supabase Storage e a URL é salva no perfil.
 
+## Uso do hardware
 
+O recurso de hardware usado no aplicativo foi a câmera do celular. Essa funcionalidade aparece na tela **Perfil**, onde o usuário pode tirar uma foto para usar como avatar.
+
+Para isso, foi utilizado o pacote `image_picker`. Quando o usuário toca no botão de tirar foto, o app abre a câmera do dispositivo. Depois que a foto é confirmada, o app lê a imagem e envia para o Supabase Storage usando o `StorageService`.
+
+Com isso, o app usa um recurso real do dispositivo mobile e também conecta esse recurso com o backend.
+
+## Tratamento de resposta
+
+O app possui tratamento básico de carregamento e erro nas principais telas.
+
+Na tela **Descobrir**, por exemplo, existe um estado de carregamento enquanto os jogos são buscados na FreeToGame API. Se a requisição falhar, o app mostra uma mensagem de erro:
+
+```text
+Não foi possível carregar os jogos. Verifique sua conexão.
+```
+
+Na tela **Jogos salvos**, também existe tratamento para casos como:
+
+- Supabase não configurado;
+- usuário não logado;
+- erro ao carregar os jogos salvos;
+- lista vazia.
+
+Na tela **Indicar**, se a função de recomendação falhar, o app mostra uma mensagem avisando que não foi possível gerar recomendações. Também existe loading enquanto a recomendação está sendo buscada.
+
+No salvamento de jogos, o app trata o caso de jogo duplicado. Se o usuário tentar salvar um jogo que já está na lista, ele recebe uma mensagem informando que o jogo já foi salvo.
+
+## Funcionalidade de compartilhamento
+
+O compartilhamento foi implementado com o pacote `share_plus`. Foi criado um `ShareService` para concentrar essa lógica fora das telas.
+
+O app pega o link do jogo usando primeiro o campo:
+
+```text
+game_url
+```
+
+Se esse campo não existir, usa:
+
+```text
+freetogame_profile_url
+```
+
+Depois disso, o app chama o compartilhamento nativo do celular. Assim, o usuário pode enviar o link do jogo por WhatsApp, e-mail, mensagens ou qualquer outro app disponível no dispositivo.
+
+Essa funcionalidade aparece nos cards dos jogos, então pode ser usada nos jogos da tela **Descobrir**, nos **Jogos salvos** e também nos jogos retornados pela tela **Indicar**.
