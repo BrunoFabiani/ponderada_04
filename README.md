@@ -1,8 +1,49 @@
 # Free Game Finder
 
+## VIDEO:
+https://drive.google.com/file/d/1tMbVLFSur54RJbL86OmTph-fcBECEcnr/view?usp=sharing
+
+## APP
+
 O **Free Game Finder** é um aplicativo mobile feito com a ideia de ajudar pessoas a descobrirem jogos gratuitos que tenham relação com seus interesses e organizar estes jogos dentro do app.
 
 A ideia surgiu a partir de um problema simples: com muitos jogos gratuitos disponíveis é dificil se manter atualizado ou se sentir sobrecarregado. O app vem para facilitar e auxiliar a procura de novos jogos para jogar e também organizar de forma limpa os jogos que te interessam.
+
+## Como rodar a versão web
+
+Para rodar a versão web do projeto, entre na pasta do app Flutter:
+
+```cmd
+cd app
+```
+
+Depois execute o Flutter passando as configurações do Supabase por `--dart-define`.
+
+```cmd
+flutter run -d chrome --dart-define=SUPABASE_URL=https://czhllgnlganpgkavkyaz.supabase.co --dart-define=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6aGxsZ25sZ2FucGdrYXZreWF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MTAwMjUsImV4cCI6MjA5NzI4NjAyNX0.HnyhE7UgilkN4jbhObAzida76a5wz5tzA_1DIbazO6s
+```
+
+## Como rodar no Android Studio
+
+Para rodar como aplicativo mobile, abra o Android Studio e instale um emulador Android.
+
+Passos simples:
+
+1. Abra o Android Studio.
+2. Vá em **Device Manager**.
+3. Clique em **Create device**.
+4. Escolha **Pixel 6**.
+5. Baixe uma imagem Android recente.
+6. Crie e inicie o emulador.
+7. Abra a pasta `app` do projeto no Android Studio.
+8. Rode o app com o mesmo comando, escolhendo o dispositivo Android:
+
+Entre dentro do additional run args e coloque isto:
+
+```cmd
+--dart-define=SUPABASE_URL=https://czhllgnlganpgkavkyaz.supabase.co --dart-define=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6aGxsZ25sZ2FucGdrYXZreWF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MTAwMjUsImV4cCI6MjA5NzI4NjAyNX0.HnyhE7UgilkN4jbhObAzida76a5wz5tzA_1DIbazO6s
+```
+E rode o projeto
 
 ## Tecnologias Utilizadas
 
