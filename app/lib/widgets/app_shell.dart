@@ -31,12 +31,12 @@ class AppShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.explore_outlined),
             selectedIcon: Icon(Icons.explore),
-            label: 'Discover',
+            label: 'Descobrir',
           ),
           NavigationDestination(
             icon: Icon(Icons.bookmark_border),
             selectedIcon: Icon(Icons.bookmark),
-            label: 'Saved',
+            label: 'Salvos',
           ),
           NavigationDestination(
             icon: Icon(Icons.auto_awesome_outlined),
@@ -46,7 +46,7 @@ class AppShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'Perfil',
           ),
         ],
       ),

@@ -1,233 +1,89 @@
 # Project Handoff - Ponderada 04
 
-This document summarizes the project context, current implementation state, technical decisions, and next improvements. It is intended to help another Codex session continue the work without needing the full previous conversation.
+Este arquivo resume o contexto atual do projeto **Atividade Ponderada 4**, as decisões técnicas tomadas, o que já foi implementado e o que ainda falta antes da entrega.
 
-## Project Context
+## Contexto da Ponderada
 
-This is a college mobile development assignment called **Atividade Ponderada 4**.
+A atividade pede um aplicativo mobile real, não apenas uma página web responsiva. Os requisitos principais são:
 
-The required application must be a real mobile app, not only a responsive web app. It must include:
+- App mobile em Flutter, Kotlin, SwiftUI ou tecnologia similar.
+- Mais de duas telas.
+- Navegação funcional.
+- Integração com backend.
+- Persistência em banco de dados.
+- Consumo de API externa.
+- Sistema de notificações.
+- Compartilhamento nativo.
+- Uso de pelo menos um recurso de hardware do celular.
+- UI organizada.
+- Loading e tratamento básico de erro.
+- Documentação mínima.
+- Demo/vídeo funcional.
+- Repositório público no GitHub.
 
-- Mobile implementation using Flutter, Kotlin, SwiftUI or another mobile technology.
-- More than two screens.
-- Functional navigation.
-- Backend integration.
-- Database persistence.
-- Consumption of an external API.
-- Notification system.
-- Native sharing feature.
-- Use of at least one mobile hardware feature.
-- Organized and coherent UI.
-- Basic loading/error handling.
-- Minimal documentation.
-- Functional demo/video.
-- Public GitHub repository.
+## Ideia do Projeto
 
-The chosen project idea is a mobile app for helping users find good free games to play.
-
-Working concept:
+Nome/conceito:
 
 ```text
 FreeGame Finder
 ```
 
-Problem:
+Problema:
 
 ```text
-Users want to find good games to play, but do not want to pay and do not want to waste time searching manually.
+Usuários querem encontrar jogos bons para jogar, mas não querem pagar e nem perder tempo pesquisando manualmente.
 ```
 
-Solution:
+Solução:
 
 ```text
-A mobile app that recommends free-to-play games using the FreeToGame API, lets users save games they want to play, and later uses an LLM to recommend or guess games in an Akinator-like flow.
+Um app mobile que lista jogos free-to-play usando a FreeToGame API, permite salvar jogos em uma lista pessoal e usa IA para recomendar 3 jogos com base no texto do usuário.
 ```
 
-## Main Functional Scope
+## Estado Atual do App
 
-The app should let users:
-
-- Create/login to an account.
-- View free games from the FreeToGame API.
-- See game details.
-- Save games to a personal "games to play" list.
-- Mark saved games with statuses like `interested`, `playing`, `finished`, `dropped`.
-- Use a profile screen with a photo taken from the phone camera.
-- Share a game through the native mobile sharing sheet.
-- Receive local notifications.
-- Use an AI/LLM recommendation flow later.
-
-The AI feature should not invent games. It should receive candidate games from the FreeToGame API and choose/recommend from those real games.
-
-## External API
-
-The app uses the FreeToGame API:
-
-```text
-https://www.freetogame.com/api-doc
-```
-
-Important endpoints:
-
-```text
-GET https://www.freetogame.com/api/games
-GET https://www.freetogame.com/api/games?category=shooter&platform=pc
-GET https://www.freetogame.com/api/games?sort-by=popularity
-GET https://www.freetogame.com/api/filter?tag=3d.mmorpg.fantasy.pvp
-GET https://www.freetogame.com/api/game?id=540
-```
-
-Local API sample files were generated under:
-
-```text
-api_samples/
-```
-
-The script used to regenerate them is:
-
-```text
-scripts/test_freetogame_api.ps1
-```
-
-Run it from the repo root:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\test_freetogame_api.ps1
-```
-
-Current sample results from previous test:
-
-- `games_all.json`: 411 games.
-- `games_shooter_pc.json`: 117 games.
-- `games_browser_strategy.json`: 46 games.
-- `games_sorted_popularity.json`: 411 games.
-- `games_filtered_tags.json`: 88 games.
-- `game_detail_540.json`: detail response for Overwatch.
-
-## Backend Decision
-
-The backend is **Supabase**.
-
-Supabase is being used for:
-
-- Auth.
-- Postgres database.
-- Storage for profile photos.
-- RLS policies.
-- Future Edge Function for the LLM API call.
-
-No separate Express/NestJS backend is planned for now.
-
-Recommended architecture:
-
-```text
-Flutter app
-  -> Repositories/services inside Flutter
-  -> Supabase Auth/Database/Storage
-  -> FreeToGame API
-  -> Supabase Edge Function later for LLM
-```
-
-Reason:
-
-- Supabase satisfies the assignment backend requirement.
-- FreeToGame does not need a secret key, so it can be called directly from Flutter.
-- LLM APIs require secret keys, so the LLM should be called through a backend/Edge Function later.
-
-## Supabase Database
-
-The database has these tables:
-
-```text
-profiles
-games
-games_to_play
-recommendation_sessions
-```
-
-Purpose:
-
-```text
-profiles
-= app-specific user profile data
-
-games
-= cached game catalog/details from FreeToGame
-
-games_to_play
-= user's saved games list
-
-recommendation_sessions
-= saved AI recommendation/Akinator sessions
-```
-
-Important constraints/policies:
-
-- `profiles.id` references `auth.users.id`.
-- `games.id` is the FreeToGame game ID.
-- `games_to_play.user_id` references `profiles.id`.
-- `games_to_play.game_id` references `games.id`.
-- `recommendation_sessions.user_id` references `profiles.id`.
-- `games_to_play(user_id, game_id)` is unique, so the same user cannot save the same game twice.
-- RLS is enabled.
-- Users can only access their own profile, saved games, and recommendation sessions.
-- Authenticated users can read/insert/update cached games.
-
-Backend documentation exists here:
-
-```text
-docs/supabase_backend.md
-```
-
-## Supabase Storage
-
-A bucket should exist or be created:
-
-```text
-avatars
-```
-
-Recommended profile image flow:
-
-```text
-User takes photo with phone camera
--> app uploads image to Supabase Storage
--> path: {user_id}/avatar.jpg
--> app gets public URL
--> app updates profiles.avatar_url
-```
-
-The database should store the image URL/path, not the image binary itself.
-
-## Flutter App State
-
-Flutter app folder:
+O app está em:
 
 ```text
 app/
 ```
 
-The app was created with Flutter and currently has a starter structure:
+Principais telas implementadas:
+
+- Login.
+- Cadastro.
+- Descobrir jogos.
+- Jogos salvos.
+- Recomendação com IA.
+- Perfil.
+
+O `main.dart` já foi reduzido e a estrutura foi separada em arquivos menores:
 
 ```text
 app/lib/
   main.dart
+  app/
+    app_routes.dart
+    game_finder_app.dart
   core/
     supabase_config.dart
   models/
-    profile_model.dart
     game_model.dart
+    game_recommendation_model.dart
     game_to_play_model.dart
+    profile_model.dart
     recommendation_session_model.dart
-  services/
-    freetogame_api_service.dart
-    storage_service.dart
-    notification_service.dart
   repositories/
     auth_repository.dart
-    profile_repository.dart
     game_repository.dart
+    profile_repository.dart
     recommendation_repository.dart
+  services/
+    ai_recommendation_service.dart
+    freetogame_api_service.dart
+    notification_service.dart
+    storage_service.dart
   screens/
     auth/
     games/
@@ -237,404 +93,449 @@ app/lib/
   widgets/
 ```
 
-Packages added to `pubspec.yaml`:
+## Funcionalidades Já Implementadas
 
-```yaml
-supabase_flutter
-http
-image_picker
-share_plus
+### Autenticação
+
+Login e cadastro estão conectados ao Supabase Auth.
+
+Fluxo:
+
+```text
+LoginScreen -> AuthRepository.signIn
+RegisterScreen -> AuthRepository.signUp -> ProfileRepository.upsertProfile
+```
+
+### Descobrir Jogos
+
+A tela **Descobrir** consome diretamente a FreeToGame API através de:
+
+```text
+FreeToGameApiService
+```
+
+Ela exibe:
+
+- Loading.
+- Erro.
+- Lista de jogos.
+- Cards com imagem, título, descrição, gênero e plataforma.
+- Filtros simples de plataforma e categoria.
+- Botão para salvar jogo.
+
+Decisão importante: a FreeToGame API não usa segredo, então ela pode ser chamada diretamente pelo Flutter. O `GameRepository` é usado principalmente para ações com Supabase.
+
+### Salvar Jogos
+
+Salvar um jogo faz:
+
+```text
+GameRepository.saveFreeGame
+  -> upsert em games
+  -> insert em games_to_play
+```
+
+Também trata duplicidade com a constraint única de:
+
+```text
+games_to_play(user_id, game_id)
+```
+
+### Jogos Salvos
+
+A tela **Jogos salvos** carrega a lista persistida no Supabase:
+
+```text
+GameRepository.fetchMySavedGames
+```
+
+Ela mostra loading, erro, lista vazia e os cards dos jogos salvos.
+
+### Perfil e Câmera
+
+A tela **Perfil** usa `image_picker` para abrir a câmera do celular.
+
+Fluxo:
+
+```text
+Usuário tira foto
+-> XFile.readAsBytes()
+-> StorageService.uploadAvatar
+-> Supabase Storage bucket avatars
+-> path {user_id}/avatar.jpg
+-> ProfileRepository.updateAvatarUrl
+-> profiles.avatar_url
+```
+
+Foi escolhida a abordagem com bytes e `uploadBinary`, evitando `dart:io` direto na tela.
+
+O `Info.plist` do iOS recebeu:
+
+```text
+NSCameraUsageDescription
+```
+
+### Notificações
+
+O app usa:
+
+```text
 flutter_local_notifications
 ```
 
-`main.dart` currently contains:
-
-- Conditional Supabase initialization.
-- `AppRoutes`.
-- `GameFinderApp`.
-- Temporary placeholder screens.
-- Bottom navigation.
-- Shared UI widgets.
-
-Important note:
+Quando um jogo é salvo, uma notificação local é disparada:
 
 ```text
-main.dart is currently too large and should be split into separate files next.
+Jogo salvo
+{gameTitle} foi adicionado aos seus jogos salvos.
 ```
 
-The current large `main.dart` was intentional as a first working navigation base, but should not remain that way.
+No Android, já foi aplicado o ajuste de desugaring no Gradle para suportar o pacote.
 
-## Current Validation
+### Recomendação com IA
 
-The following validation passed previously:
+A tela **Recomendação** já está funcional.
+
+Fluxo:
+
+```text
+Usuário digita o tipo de jogo que quer
+-> Flutter chama Supabase Edge Function recommend-games
+-> Edge Function busca jogos populares da FreeToGame
+-> Edge Function chama Groq
+-> Groq retorna 3 game_id + reason em JSON
+-> Edge Function mapeia os IDs para jogos reais
+-> Flutter mostra 3 cards
+-> Usuário pode salvar qualquer recomendação
+```
+
+Arquivos importantes:
+
+```text
+app/lib/services/ai_recommendation_service.dart
+app/lib/models/game_recommendation_model.dart
+app/lib/screens/recommendation/recommendation_screen.dart
+supabase/functions/recommend-games/index.ts
+```
+
+Decisão importante: a IA **não deve inventar jogos**. Ela só pode recomendar jogos da lista de candidatos da FreeToGame.
+
+### Provider de IA
+
+Inicialmente foi tentado OpenAI via Responses API, mas a conta retornou:
+
+```text
+429 insufficient_quota
+```
+
+Depois foi feita a troca para **Groq**, mantendo a mesma Edge Function e sem mudar o Flutter.
+
+Secrets atuais necessários para a função:
+
+```text
+GROQ_API_KEY
+GROQ_MODEL=openai/gpt-oss-20b
+```
+
+Comandos:
 
 ```powershell
-dart format lib\main.dart test\widget_test.dart
-flutter analyze --no-pub
+supabase secrets set GROQ_API_KEY=SUA_CHAVE
+supabase secrets set GROQ_MODEL=openai/gpt-oss-20b
+supabase functions deploy recommend-games
 ```
 
-Result:
+Observação: Groq também tem rate limit. Em testes, o usuário conseguiu fazer a função funcionar no app depois de aguardar o limite resetar.
+
+## Backend
+
+Backend escolhido:
 
 ```text
-No issues found.
+Supabase
 ```
 
-The default Flutter test was replaced with a smoke test for the current app.
+Usado para:
 
-## Android/Gradle Fix Already Applied
+- Auth.
+- Postgres.
+- Storage.
+- RLS.
+- Edge Function de recomendação.
 
-The app uses `flutter_local_notifications`, which required Android core library desugaring.
-
-This was fixed in:
+Tabelas:
 
 ```text
-app/android/app/build.gradle.kts
+profiles
+games
+games_to_play
+recommendation_sessions
 ```
 
-Added:
-
-```kotlin
-compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-    isCoreLibraryDesugaringEnabled = true
-}
-
-dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-}
-```
-
-## Windows/Android Studio Setup Notes
-
-On Windows, Flutter plugins require symlink support.
-
-If this error appears:
+Na implementação atual, `recommendation_sessions` existe na model/repository, mas a conversa da IA **não é persistida**. Isso foi uma decisão consciente para simplificar:
 
 ```text
-Building with plugins requires symlink support.
-Please enable Developer Mode in your system settings.
+prompt in -> 3 jogos out
 ```
 
-Run:
+Os jogos salvos continuam persistindo normalmente.
 
-```powershell
-start ms-settings:developers
-```
-
-Then enable **Developer Mode**.
-
-Other useful commands:
-
-```powershell
-flutter doctor
-flutter doctor --android-licenses
-flutter pub get
-flutter devices
-flutter run
-```
-
-Open this folder in Android Studio:
+Documentação de backend:
 
 ```text
-ponderada_04/app
+docs/supabase_backend.md
 ```
 
-Do not open only the repo root if Android Studio does not detect the Flutter project.
+## API Externa
 
-## Supabase Runtime Configuration
+FreeToGame API:
 
-Supabase config is read from Dart defines:
+```text
+https://www.freetogame.com/api-doc
+```
+
+Endpoints usados/relevantes:
+
+```text
+GET https://www.freetogame.com/api/games
+GET https://www.freetogame.com/api/games?category=shooter&platform=pc
+GET https://www.freetogame.com/api/games?sort-by=popularity
+GET https://www.freetogame.com/api/game?id=540
+```
+
+A Edge Function usa:
+
+```text
+GET https://www.freetogame.com/api/games?sort-by=popularity
+```
+
+e corta a lista para os primeiros 120 jogos para reduzir payload/custo.
+
+## Configuração de Runtime
+
+O Flutter lê Supabase por Dart defines:
 
 ```dart
 String.fromEnvironment('SUPABASE_URL')
 String.fromEnvironment('SUPABASE_ANON_KEY')
 ```
 
-Run with:
+Comando:
 
 ```powershell
 flutter run --dart-define=SUPABASE_URL=YOUR_URL --dart-define=SUPABASE_ANON_KEY=YOUR_KEY
 ```
 
-The code currently initializes Supabase only if both values are non-empty, so the placeholder app can run before Supabase is configured.
+## Edge Function
 
-## Firelink Coding Style Requirement
+Criada com:
 
-Very important:
+```powershell
+supabase functions new recommend-games
+```
 
-All Dart/Flutter code from this point onward should follow the user's requested learning/style base:
+Arquivo:
+
+```text
+supabase/functions/recommend-games/index.ts
+```
+
+Deploy:
+
+```powershell
+supabase functions deploy recommend-games
+```
+
+O Supabase CLI instalado neste ambiente não possui:
+
+```text
+supabase functions logs
+supabase functions invoke
+```
+
+Para logs, usar Supabase Dashboard:
+
+```text
+Edge Functions -> recommend-games -> Logs
+```
+
+## UI e Idioma
+
+A UI foi traduzida para português, mantendo identificadores técnicos em inglês.
+
+Traduzido:
+
+- Login/cadastro.
+- Descobrir.
+- Jogos salvos.
+- Perfil.
+- Recomendação.
+- Mensagens de erro/sucesso.
+- Notificações.
+- Barra inferior.
+
+Não traduzir:
+
+- Rotas internas.
+- Tabelas/colunas Supabase.
+- Secrets.
+- Nomes de função.
+- Valores técnicos como `freetogame`, `recommend-games`, `games_to_play`.
+
+## Firelink e Estilo de Código
+
+O usuário pediu que todo Dart/Flutter siga a base do Firelink:
 
 ```text
 https://firelink-library.github.io/mobile/flutter/dart-intro
 ```
 
-The user explicitly requested:
+Interpretação prática:
 
-```text
-"tudo de dart que vc fizer eu quero que vc tome base isso ... este firelink e as outras paginas deste firelink com as coisas de dart, sempre use ele"
-```
+- Código simples e didático.
+- Classes explícitas.
+- Tipagem clara.
+- Evitar abstrações desnecessárias.
+- Não fazer parecer uma arquitetura enterprise.
+- Manter cara de projeto universitário bem feito.
+- Preferir nomes descritivos.
+- Comentários só quando ajudarem.
+- UI Material direta.
 
-Interpretation:
+## Preferência de Colaboração
 
-- Use clear, beginner-friendly Dart/Flutter structure.
-- Prefer explicit classes and typed code.
-- Keep code readable and close to common Flutter teaching patterns.
-- Avoid overly abstract architecture.
-- Avoid code that looks AI-generated or unnecessarily clever.
-- Make the code look like a human student/project author wrote it carefully.
-- Prefer simple repositories/services over complex dependency injection.
-- Keep comments minimal and useful.
-- Use descriptive names.
-- Split files logically.
-- Keep `main.dart` small.
-- Use Material widgets in a straightforward way.
-
-Before making future Dart/Flutter edits, consult the Firelink pages if the topic is Dart/Flutter syntax, widgets, state, navigation or project organization.
-
-## Code Style and Architecture Adjustment
-
-The user observed that the current Flutter code can look too AI-generated or too polished/abstract for a student assignment.
-
-Future changes should make the app feel more like a human student project based on the Firelink Flutter material:
-
-- Keep code simple and direct.
-- Avoid adding architecture layers before they are useful.
-- Prefer readable screen code over overly generic reusable components.
-- Avoid making every small UI piece a separate abstraction unless it clearly helps.
-- Use natural, app-specific names instead of template-like names where possible.
-- Keep comments short and practical, only when they explain a real decision.
-- Do not make the code look like a production architecture demo.
-
-Important decision for the Discover/Home screen:
-
-```text
-Keep calling the FreeToGame API directly from HomeScreen through FreeToGameApiService.
-```
-
-Reason:
-
-- FreeToGame does not require a secret API key.
-- The Discover screen only needs public game data.
-- Calling the API directly is easier to understand for the assignment.
-- Adding `GameRepository` between HomeScreen and FreeToGameApiService makes this specific flow look unnecessarily abstract right now.
-
-Recommended current Discover flow:
-
-```text
-HomeScreen
-  -> FreeToGameApiService
-  -> FreeToGame /api/games
-  -> GameModel list
-  -> GameCard
-```
-
-Use `GameRepository` mainly for Supabase-related game actions, such as:
-
-- saving a game to the user's list;
-- loading saved games;
-- caching/upserting game data in the `games` table if needed.
-
-## Important Collaboration Preference
-
-The user asked:
+O usuário pediu:
 
 ```text
 "sempre fale como vc irá fazer e como eu posso fazer antes de fazer qualquer coisa"
 ```
 
-So before modifying files, explain:
+Antes de editar arquivos, explicar rapidamente:
 
-1. What will be done.
-2. Why it will be done.
-3. How the user could do it manually.
-4. Then make the change if appropriate.
+1. O que será feito.
+2. Por que será feito.
+3. Como o usuário faria manualmente.
+4. Depois aplicar a mudança.
 
-## Recommended Next Improvements
+Também foi pedido para evitar testes demorados quando não necessário. Preferir:
 
-### 1. Split `main.dart`
+```powershell
+flutter analyze --no-pub
+```
 
-Move code into:
+e passar instruções de verificação manual quando o usuário pedir.
+
+## Validações Recentes
+
+Após tradução da UI:
+
+```powershell
+flutter analyze --no-pub
+```
+
+Resultado:
 
 ```text
-lib/app/app_routes.dart
-lib/app/game_finder_app.dart
-lib/screens/auth/login_screen.dart
-lib/screens/auth/register_screen.dart
-lib/screens/home/home_screen.dart
-lib/screens/games/games_to_play_screen.dart
-lib/screens/recommendation/recommendation_screen.dart
-lib/screens/profile/profile_screen.dart
-lib/widgets/app_shell.dart
-lib/widgets/auth_scaffold.dart
-lib/widgets/empty_state.dart
-lib/widgets/placeholder_card.dart
-lib/widgets/section_header.dart
+No issues found!
 ```
 
-Then keep `main.dart` small:
+Testes não devem ser rodados automaticamente se o usuário pedir para evitar demora.
 
-```dart
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Supabase initialization
-  runApp(const GameFinderApp());
-}
+## Pendências Reais Antes da Entrega
+
+### 1. Compartilhamento nativo
+
+`share_plus` está no `pubspec.yaml`, mas ainda não foi encontrado uso real em `lib`.
+
+Este é o principal requisito técnico ainda pendente.
+
+Implementação mais simples:
+
+- Adicionar botão de compartilhar no `GameCard` ou em uma tela de detalhes.
+- Usar `share_plus`.
+- Compartilhar título + URL do jogo.
+
+### 2. README
+
+Criar ou atualizar `README.md` com:
+
+- Problema.
+- Solução.
+- Stack.
+- Como rodar.
+- Configuração Supabase.
+- Configuração Groq.
+- API FreeToGame.
+- Checklist de funcionalidades.
+
+### 3. Vídeo/Demo
+
+Gravar fluxo mostrando:
+
+1. Login/cadastro.
+2. Lista de jogos em Descobrir.
+3. Salvar jogo.
+4. Notificação.
+5. Jogos salvos persistidos.
+6. Perfil com câmera.
+7. Recomendação com IA.
+8. Salvar jogo recomendado.
+9. Compartilhamento nativo, depois que for implementado.
+
+### 4. GitHub público
+
+Confirmar que o repositório está público.
+
+## Checklist de Requisitos
+
+Estado atual:
+
+- App mobile Flutter: feito.
+- Mais de duas telas: feito.
+- Navegação funcional: feito.
+- Backend Supabase: feito.
+- Persistência em banco: feito.
+- API externa FreeToGame: feito.
+- Notificações: feito.
+- Hardware/câmera: feito.
+- IA/recomendação: feito com Groq via Edge Function.
+- Loading/erro: feito em telas principais.
+- UI em português: feito.
+- Compartilhamento nativo: pendente.
+- README: pendente ou precisa revisão.
+- Demo/vídeo: pendente.
+- GitHub público: confirmar.
+
+## Comandos Úteis
+
+Flutter:
+
+```powershell
+cd C:\Users\Bruno\Documents\ponderada_04\app
+flutter pub get
+flutter devices
+flutter run --dart-define=SUPABASE_URL=YOUR_URL --dart-define=SUPABASE_ANON_KEY=YOUR_KEY
+flutter analyze --no-pub
 ```
 
-### 2. Build real login/register UI
+Supabase:
 
-Connect:
-
-```text
-LoginScreen -> AuthRepository.signIn
-RegisterScreen -> AuthRepository.signUp + ProfileRepository.upsertProfile
+```powershell
+cd C:\Users\Bruno\Documents\ponderada_04
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase secrets list
+supabase secrets set GROQ_API_KEY=SUA_CHAVE
+supabase secrets set GROQ_MODEL=openai/gpt-oss-20b
+supabase functions deploy recommend-games
 ```
 
-Include basic loading/error states.
+## Próxima Melhor Tarefa
 
-### 3. Build Home with FreeToGame API
+Implementar **compartilhamento nativo** com `share_plus`, porque é o requisito funcional mais claro que ainda falta.
 
-Connect:
+Depois disso:
 
-```text
-HomeScreen -> GameRepository.fetchFreeGames
-```
-
-Show:
-
-- Loading.
-- Error.
-- Empty state.
-- Game cards.
-- Filter controls for platform/category.
-
-### 4. Build Game Detail Screen
-
-Needed for the main user flow.
-
-It should:
-
-- Display game image/title/description/details.
-- Fetch details with `FreeToGameApiService.fetchGameDetails`.
-- Let the user save the game.
-- Let the user share the game with `share_plus`.
-
-### 5. Save Game to Supabase
-
-When saving:
-
-1. Upsert the game into `games`.
-2. Insert into `games_to_play`.
-3. Handle duplicate save constraint gracefully.
-
-### 6. Build Games To Play Screen
-
-Connect:
-
-```text
-GamesToPlayScreen -> GameRepository.fetchMyGamesToPlay
-```
-
-Eventually join saved games with game details from `games`.
-
-### 7. Build Profile + Camera Upload
-
-Use:
-
-```text
-image_picker
-StorageService
-ProfileRepository.updateAvatarUrl
-```
-
-This satisfies the mobile hardware requirement.
-
-### 8. Notifications
-
-Use `flutter_local_notifications`.
-
-Simple demo use case:
-
-```text
-After the user saves a game, show/schedule a local notification:
-"You saved a new game to try later."
-```
-
-Or:
-
-```text
-Daily reminder to discover a free game.
-```
-
-### 9. LLM Recommendation Flow
-
-Do this later, after the base app works.
-
-Recommended architecture:
-
-```text
-Flutter RecommendationScreen
--> Supabase Edge Function recommend-games
--> LLM API
--> save result in recommendation_sessions
-```
-
-Do not put LLM API keys in Flutter.
-
-The LLM should receive candidate games from FreeToGame and return structured JSON like:
-
-```json
-{
-  "recommended_games": [
-    {
-      "game_id": 540,
-      "title": "Overwatch",
-      "reason": "It matches your preference for fast competitive team-based matches.",
-      "confidence": 90
-    }
-  ]
-}
-```
-
-### 10. README
-
-Update project README with:
-
-- Problem.
-- Solution.
-- Tech stack.
-- Supabase setup.
-- How to run.
-- FreeToGame API usage.
-- Features checklist.
-
-## Suggested Commit Names
-
-Recent work could be committed as:
-
-```bash
-git commit -m "Set up Flutter structure and Supabase backend docs"
-```
-
-or:
-
-```bash
-git commit -m "Add Flutter navigation scaffold"
-```
-
-Future split of `main.dart`:
-
-```bash
-git commit -m "Split Flutter app scaffold into screens and widgets"
-```
-
-## Current Priority
-
-The best next task is:
-
-```text
-Refactor main.dart into separate app, screen and widget files.
-```
-
-This should be done before adding more functionality, because adding real API/auth logic into the current large `main.dart` will make the app harder to maintain.
+1. README.
+2. Demo.
+3. Revisão final do checklist.

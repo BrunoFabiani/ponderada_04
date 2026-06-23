@@ -23,7 +23,8 @@ class NotificationService {
 
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
   }
 
@@ -33,12 +34,12 @@ class NotificationService {
   }) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-      'saved_games',
-      'Saved Games',
-      channelDescription: 'Notifications when a game is saved.',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
+          'saved_games',
+          'Jogos salvos',
+          channelDescription: 'Notificações quando um jogo é salvo.',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
 
@@ -49,13 +50,9 @@ class NotificationService {
 
     await _plugin.show(
       id: gameId,
-      title: 'Game saved',
-      body: '$gameTitle was added to your saved games.',
+      title: 'Jogo salvo',
+      body: '$gameTitle foi adicionado aos seus jogos salvos.',
       notificationDetails: details,
     );
-  }
-
-  Future<void> showRecommendationReminder() async {
-    // Placeholder for future reminder notifications.
   }
 }

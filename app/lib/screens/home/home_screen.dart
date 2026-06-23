@@ -60,7 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
 
       setState(() {
-        errorMessage = 'Could not load games. Check your connection.';
+        errorMessage =
+            'Não foi possível carregar os jogos. Verifique sua conexão.';
         isLoading = false;
       });
     }
@@ -68,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> saveGame(GameModel game) async {
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
-      showMessage('Configure Supabase before saving games.');
+      showMessage('Configure o Supabase antes de salvar jogos.');
       return;
     }
 
@@ -76,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final User? user = client.auth.currentUser;
 
     if (user == null) {
-      showMessage('Create an account or login before saving games.');
+      showMessage('Crie uma conta ou entre antes de salvar jogos.');
       Navigator.pushNamed(context, AppRoutes.login);
       return;
     }
@@ -96,18 +97,18 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (!mounted) return;
-      showMessage('${game.title} was saved.');
+      showMessage('${game.title} foi salvo.');
     } on PostgrestException catch (error) {
       if (!mounted) return;
 
       if (error.code == '23505') {
-        showMessage('This game is already saved.');
+        showMessage('Esse jogo já está salvo.');
       } else {
-        showMessage('Could not save this game.');
+        showMessage('Não foi possível salvar esse jogo.');
       }
     } catch (error) {
       if (!mounted) return;
-      showMessage('Could not save this game.');
+      showMessage('Não foi possível salvar esse jogo.');
     } finally {
       if (mounted) {
         setState(() {
@@ -127,15 +128,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return AppShell(
       currentRoute: AppRoutes.home,
-      title: 'Discover',
+      title: 'Descobrir',
       child: RefreshIndicator(
         onRefresh: loadGames,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             const SectionHeader(
-              title: 'Recommended free games',
-              subtitle: 'Popular free-to-play games from FreeToGame.',
+              title: 'Jogos gratuitos recomendados',
+              subtitle: 'Jogos free-to-play populares da FreeToGame.',
             ),
             const SizedBox(height: 16),
             _HomeFilters(
@@ -177,8 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (games.isEmpty) {
       return const EmptyState(
         icon: Icons.search_off,
-        title: 'No games found',
-        subtitle: 'Try changing the platform or category filter.',
+        title: 'Nenhum jogo encontrado',
+        subtitle: 'Tente mudar o filtro de plataforma ou categoria.',
       );
     }
 
@@ -222,11 +223,11 @@ class _HomeFilters extends StatelessWidget {
         DropdownButtonFormField<String>(
           initialValue: selectedPlatform,
           decoration: const InputDecoration(
-            labelText: 'Platform',
+            labelText: 'Plataforma',
             border: OutlineInputBorder(),
           ),
           items: const [
-            DropdownMenuItem(value: 'all', child: Text('All platforms')),
+            DropdownMenuItem(value: 'all', child: Text('Todas as plataformas')),
             DropdownMenuItem(value: 'pc', child: Text('PC')),
             DropdownMenuItem(value: 'browser', child: Text('Browser')),
           ],
@@ -238,11 +239,11 @@ class _HomeFilters extends StatelessWidget {
         DropdownButtonFormField<String>(
           initialValue: selectedCategory,
           decoration: const InputDecoration(
-            labelText: 'Category',
+            labelText: 'Categoria',
             border: OutlineInputBorder(),
           ),
           items: const [
-            DropdownMenuItem(value: 'all', child: Text('All categories')),
+            DropdownMenuItem(value: 'all', child: Text('Todas as categorias')),
             DropdownMenuItem(value: 'shooter', child: Text('Shooter')),
             DropdownMenuItem(value: 'strategy', child: Text('Strategy')),
             DropdownMenuItem(value: 'moba', child: Text('MOBA')),
@@ -283,7 +284,10 @@ class _ErrorState extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
-          FilledButton(onPressed: onRetry, child: const Text('Try again')),
+          FilledButton(
+            onPressed: onRetry,
+            child: const Text('Tentar novamente'),
+          ),
         ],
       ),
     );

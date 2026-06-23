@@ -58,19 +58,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         isLoadingProfile = false;
       });
-      showMessage('Could not load profile.');
+      showMessage('Não foi possível carregar o perfil.');
     }
   }
 
   Future<void> takeAvatarPhoto() async {
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
-      showMessage('Supabase is not configured.');
+      showMessage('O Supabase não está configurado.');
       return;
     }
 
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
-      showMessage('Log in before changing your profile photo.');
+      showMessage('Entre antes de alterar sua foto de perfil.');
       return;
     }
 
@@ -107,14 +107,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         profile = ProfileModel(
           id: profile?.id ?? user.id,
-          username: profile?.username ?? user.email ?? 'Player',
+          username: profile?.username ?? user.email ?? 'Jogador',
           avatarUrl: avatarUrl,
         );
       });
-      showMessage('Profile photo updated.');
+      showMessage('Foto de perfil atualizada.');
     } catch (error) {
       if (!mounted) return;
-      showMessage('Could not update profile photo.');
+      showMessage('Não foi possível atualizar a foto de perfil.');
     } finally {
       if (mounted) {
         setState(() {
@@ -126,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> logout() async {
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
-      showMessage('Supabase is not configured.');
+      showMessage('O Supabase não está configurado.');
       return;
     }
 
@@ -149,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      showMessage('Could not log out.');
+      showMessage('Não foi possível sair.');
     } finally {
       if (mounted) {
         setState(() {
@@ -169,13 +169,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return AppShell(
       currentRoute: AppRoutes.profile,
-      title: 'Profile',
+      title: 'Perfil',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           const SectionHeader(
-            title: 'Player profile',
-            subtitle: 'Manage your player profile and profile photo.',
+            title: 'Perfil do jogador',
+            subtitle: 'Gerencie seu perfil e sua foto no aplicativo.',
           ),
           const SizedBox(height: 12),
           _ProfileCard(
@@ -194,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.logout),
-            label: const Text('Log out'),
+            label: const Text('Sair'),
           ),
         ],
       ),
@@ -241,7 +241,7 @@ class _ProfileCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              profile?.username ?? 'Player',
+              profile?.username ?? 'Jogador',
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -250,8 +250,8 @@ class _ProfileCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               profile == null
-                  ? 'No profile loaded yet.'
-                  : 'Your avatar is stored in Supabase.',
+                  ? 'Nenhum perfil carregado ainda.'
+                  : 'Sua foto está salva no Supabase.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -265,7 +265,7 @@ class _ProfileCard extends StatelessWidget {
                     )
                   : const Icon(Icons.photo_camera),
               label: Text(
-                isUploadingAvatar ? 'Uploading photo...' : 'Take profile photo',
+                isUploadingAvatar ? 'Enviando foto...' : 'Tirar foto de perfil',
               ),
             ),
           ],

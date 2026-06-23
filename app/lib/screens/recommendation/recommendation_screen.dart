@@ -39,12 +39,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     final String prompt = promptController.text.trim();
 
     if (prompt.isEmpty) {
-      showMessage('Describe what kind of game you want.');
+      showMessage('Descreva que tipo de jogo você quer encontrar.');
       return;
     }
 
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
-      showMessage('Configure Supabase before using AI recommendations.');
+      showMessage('Configure o Supabase antes de usar recomendações com IA.');
       return;
     }
 
@@ -68,7 +68,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       if (!mounted) return;
 
       setState(() {
-        errorMessage = 'Could not get recommendations: $error';
+        errorMessage = 'Não foi possível gerar recomendações: $error';
       });
     } finally {
       if (mounted) {
@@ -81,7 +81,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
   Future<void> saveGame(GameModel game) async {
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
-      showMessage('Configure Supabase before saving games.');
+      showMessage('Configure o Supabase antes de salvar jogos.');
       return;
     }
 
@@ -89,7 +89,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     final User? user = client.auth.currentUser;
 
     if (user == null) {
-      showMessage('Create an account or login before saving games.');
+      showMessage('Crie uma conta ou entre antes de salvar jogos.');
       Navigator.pushNamed(context, AppRoutes.login);
       return;
     }
@@ -108,18 +108,18 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       );
 
       if (!mounted) return;
-      showMessage('${game.title} was saved.');
+      showMessage('${game.title} foi salvo.');
     } on PostgrestException catch (error) {
       if (!mounted) return;
 
       if (error.code == '23505') {
-        showMessage('This game is already saved.');
+        showMessage('Esse jogo já está salvo.');
       } else {
-        showMessage('Could not save this game.');
+        showMessage('Não foi possível salvar esse jogo.');
       }
     } catch (error) {
       if (!mounted) return;
-      showMessage('Could not save this game.');
+      showMessage('Não foi possível salvar esse jogo.');
     } finally {
       if (mounted) {
         setState(() {
@@ -139,13 +139,14 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   Widget build(BuildContext context) {
     return AppShell(
       currentRoute: AppRoutes.recommendation,
-      title: 'Recommendation',
+      title: 'Recomendação',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           const SectionHeader(
-            title: 'Find my game',
-            subtitle: 'Describe what you want and get 3 real free games.',
+            title: 'Encontrar meu jogo',
+            subtitle:
+                'Descreva o que você procura e receba 3 jogos gratuitos reais.',
           ),
           const SizedBox(height: 16),
           TextField(
@@ -153,8 +154,9 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
             minLines: 3,
             maxLines: 5,
             decoration: const InputDecoration(
-              labelText: 'What kind of game do you want?',
-              hintText: 'Example: a chill RPG with progression, not too hard',
+              labelText: 'Que tipo de jogo você quer?',
+              hintText:
+                  'Exemplo: um RPG tranquilo, com progressão e sem ser difícil demais',
               border: OutlineInputBorder(),
             ),
           ),
@@ -168,7 +170,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.auto_awesome),
-            label: Text(isLoading ? 'Finding games...' : 'Recommend games'),
+            label: Text(isLoading ? 'Buscando jogos...' : 'Recomendar jogos'),
           ),
           const SizedBox(height: 16),
           _buildContent(),
@@ -188,7 +190,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     if (recommendations.isEmpty) {
       return const _RecommendationMessage(
         icon: Icons.psychology_alt_outlined,
-        message: 'Your recommended games will appear here.',
+        message: 'Suas recomendações vão aparecer aqui.',
       );
     }
 

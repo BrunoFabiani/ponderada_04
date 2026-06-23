@@ -7,18 +7,18 @@ void main() {
     await tester.pumpWidget(const GameFinderApp());
 
     expect(find.text('FreeGame Finder'), findsOneWidget);
-    expect(find.text('Login'), findsOneWidget);
-    expect(find.text('Create account'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('Criar conta'), findsOneWidget);
   });
 
   testWidgets('navigates from login to register', (WidgetTester tester) async {
     await tester.pumpWidget(const GameFinderApp());
 
-    await tester.tap(find.text('Create account'));
+    await tester.tap(find.text('Criar conta'));
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Your saved games will stay linked to your profile.'),
+      find.text('Seus jogos salvos ficam ligados ao seu perfil.'),
       findsOneWidget,
     );
   });

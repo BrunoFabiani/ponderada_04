@@ -32,7 +32,7 @@ class _GamesToPlayScreenState extends State<GamesToPlayScreen> {
   Future<void> loadSavedGames() async {
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
       setState(() {
-        errorMessage = 'Configure Supabase to load saved games.';
+        errorMessage = 'Configure o Supabase para carregar os jogos salvos.';
         isLoading = false;
       });
       return;
@@ -43,7 +43,7 @@ class _GamesToPlayScreenState extends State<GamesToPlayScreen> {
 
     if (user == null) {
       setState(() {
-        errorMessage = 'Login to see your saved games.';
+        errorMessage = 'Entre para ver seus jogos salvos.';
         isLoading = false;
       });
       return;
@@ -55,9 +55,7 @@ class _GamesToPlayScreenState extends State<GamesToPlayScreen> {
     });
 
     try {
-      final GameRepository repository = GameRepository(
-        supabaseClient: client,
-      );
+      final GameRepository repository = GameRepository(supabaseClient: client);
 
       final List<GameModel> loadedGames = await repository.fetchMySavedGames(
         user.id,
@@ -73,7 +71,7 @@ class _GamesToPlayScreenState extends State<GamesToPlayScreen> {
       if (!mounted) return;
 
       setState(() {
-        errorMessage = 'Could not load saved games.';
+        errorMessage = 'Não foi possível carregar os jogos salvos.';
         isLoading = false;
       });
     }
@@ -83,7 +81,7 @@ class _GamesToPlayScreenState extends State<GamesToPlayScreen> {
   Widget build(BuildContext context) {
     return AppShell(
       currentRoute: AppRoutes.gamesToPlay,
-      title: 'Saved Games',
+      title: 'Jogos salvos',
       child: RefreshIndicator(
         onRefresh: loadSavedGames,
         child: ListView(
@@ -105,8 +103,8 @@ class _GamesToPlayScreenState extends State<GamesToPlayScreen> {
             else if (savedGames.isEmpty)
               const EmptyState(
                 icon: Icons.bookmarks_outlined,
-                title: 'No saved games yet',
-                subtitle: 'Save games from Discover to see them here.',
+                title: 'Nenhum jogo salvo ainda',
+                subtitle: 'Salve jogos em Descobrir para vê-los aqui.',
               )
             else
               ...savedGames.map((GameModel game) {
@@ -152,10 +150,12 @@ class _SavedError extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: message.startsWith('Login')
+            onPressed: message.startsWith('Entre')
                 ? onLoginPressed
                 : onRetryPressed,
-            child: Text(message.startsWith('Login') ? 'Login' : 'Try again'),
+            child: Text(
+              message.startsWith('Entre') ? 'Entrar' : 'Tentar novamente',
+            ),
           ),
         ],
       ),

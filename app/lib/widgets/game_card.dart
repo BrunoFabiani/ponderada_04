@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/game_model.dart';
+import '../services/share_service.dart';
 
 class GameCard extends StatelessWidget {
   const GameCard({
@@ -15,6 +16,8 @@ class GameCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onSavePressed;
   final bool isSaving;
+
+  static const ShareService _shareService = ShareService();
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +44,7 @@ class GameCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    game.shortDescription ?? 'No description available.',
+                    game.shortDescription ?? 'Sem descrição disponível.',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -56,22 +59,39 @@ class GameCard extends StatelessWidget {
                         _InfoChip(label: game.platform!),
                     ],
                   ),
-                  if (onSavePressed != null) ...[
+                  if (_shareService.hasGameLink(game) ||
+                      onSavePressed != null) ...[
                     const SizedBox(height: 12),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: FilledButton.icon(
-                        onPressed: isSaving ? null : onSavePressed,
-                        icon: isSaving
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.bookmark_add_outlined),
-                        label: const Text('Save'),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.end,
+                        children: [
+                          if (_shareService.hasGameLink(game))
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                _shareService.shareGameLink(game);
+                              },
+                              icon: const Icon(Icons.share_outlined),
+                              label: const Text('Compartilhar'),
+                            ),
+                          if (onSavePressed != null)
+                            FilledButton.icon(
+                              onPressed: isSaving ? null : onSavePressed,
+                              icon: isSaving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.bookmark_add_outlined),
+                              label: const Text('Salvar'),
+                            ),
+                        ],
                       ),
                     ),
                   ],

@@ -30,12 +30,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> login() async {
     if (emailController.text.trim().isEmpty ||
         passwordController.text.trim().isEmpty) {
-      showMessage('Fill email and password.');
+      showMessage('Preencha o e-mail e a senha.');
       return;
     }
 
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
-      showMessage('Configure Supabase before logging in.');
+      showMessage('Configure o Supabase antes de entrar.');
       return;
     }
 
@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
       showMessage(error.message);
     } catch (error) {
       if (!mounted) return;
-      showMessage('Could not login.');
+      showMessage('Não foi possível entrar.');
     } finally {
       if (mounted) {
         setState(() {
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Login to save games you want to play.',
+                    'Entre para salvar os jogos que você quer testar depois.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: passwordController,
                     obscureText: true,
                     decoration: const InputDecoration(
-                      labelText: 'Password',
+                      labelText: 'Senha',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Login'),
+                        : const Text('Entrar'),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         : () {
                             Navigator.pushNamed(context, AppRoutes.register);
                           },
-                    child: const Text('Create account'),
+                    child: const Text('Criar conta'),
                   ),
                 ],
               ),

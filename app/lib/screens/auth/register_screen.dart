@@ -35,17 +35,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (nameController.text.trim().isEmpty ||
         emailController.text.trim().isEmpty ||
         passwordController.text.trim().isEmpty) {
-      showMessage('Fill name, email and password.');
+      showMessage('Preencha nome, e-mail e senha.');
       return;
     }
 
     if (passwordController.text.trim().length < 6) {
-      showMessage('Password needs at least 6 characters.');
+      showMessage('A senha precisa ter pelo menos 6 caracteres.');
       return;
     }
 
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
-      showMessage('Configure Supabase before creating an account.');
+      showMessage('Configure o Supabase antes de criar uma conta.');
       return;
     }
 
@@ -67,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (user == null || currentUser == null) {
         if (!mounted) return;
-        showMessage('Check your email to confirm your account.');
+        showMessage('Confira seu e-mail para confirmar a conta.');
         return;
       }
 
@@ -83,7 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       showMessage(error.message);
     } catch (error) {
       if (!mounted) return;
-      showMessage('Could not create account.');
+      showMessage('Não foi possível criar a conta.');
     } finally {
       if (mounted) {
         setState(() {
@@ -113,13 +113,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Create account',
+                    'Criar conta',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Your saved games will stay linked to your profile.',
+                    'Seus jogos salvos ficam ligados ao seu perfil.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
@@ -127,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: nameController,
                     decoration: const InputDecoration(
-                      labelText: 'Name',
+                      labelText: 'Nome',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -145,7 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: passwordController,
                     obscureText: true,
                     decoration: const InputDecoration(
-                      labelText: 'Password',
+                      labelText: 'Senha',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -158,7 +158,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Create account'),
+                        : const Text('Criar conta'),
                   ),
                 ],
               ),
