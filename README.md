@@ -1,303 +1,101 @@
-# FreeGame Finder
+# Free Game Finder
 
-Aplicativo mobile desenvolvido para a **Atividade Ponderada 4**. A proposta do app é ajudar pessoas a encontrarem jogos gratuitos para jogar, sem precisar pesquisar manualmente em vários sites.
+O **Free Game Finder** é um aplicativo mobile feito com a ideia de ajudar pessoas a descobrirem jogos gratuitos que tenham relação com seus interesses e organizar estes jogos dentro do app.
 
-O app lista jogos free-to-play da FreeToGame API, permite salvar jogos em uma lista pessoal, usa câmera para foto de perfil, envia notificações locais, permite compartilhar links de jogos e possui uma tela de recomendação que sugere 3 jogos com base no texto do usuário.
+A ideia surgiu a partir de um problema simples: com muitos jogos gratuitos disponíveis é dificil se manter atualizado ou se sentir sobrecarregado. O app vem para facilitar e auxiliar a procura de novos jogos para jogar e também organizar de forma limpa os jogos que te interessam.
 
-## Ideia do App
+## Tecnologias Utilizadas
 
-O problema escolhido foi:
+O aplicativo foi desenvolvido em **Flutter**, usando **Dart**. A escolha do Flutter foi feita pela familiaridade com a tecnologia.
 
-```text
-Muitas pessoas querem encontrar jogos bons para jogar, mas não querem pagar e nem perder tempo procurando manualmente.
-```
+O backend foi feito com **Supabase**, que foi escolhido pela facilidade para configurar autenticação, banco de dados, storage e funções server-side em um mesmo ambiente. Isso ajudou a manter o projeto mais direto, sem precisar criar um backend separado do zero.
 
-A solução foi criar um app chamado **FreeGame Finder**, onde o usuário pode:
+As principais tecnologias e pacotes utilizados foram:
 
-- criar uma conta;
-- ver jogos gratuitos;
-- filtrar jogos por plataforma e categoria;
-- salvar jogos que quer testar depois;
-- receber notificação ao salvar um jogo;
-- tirar foto de perfil com a câmera;
-- pedir uma recomendação de jogos;
-- compartilhar o link de um jogo usando o compartilhamento nativo do celular.
+- **Flutter** para o desenvolvimento mobile.
+- **Supabase Auth** para login e cadastro.
+- **Supabase Database** para salvar perfis, jogos e listas do usuário.
+- **Supabase Storage** para guardar a foto de perfil.
+- **Supabase Edge Function** para a lógica de recomendação.
+- **Groq** como serviço externo usado pela função de recomendação.
+- **FreeToGame API** para buscar jogos gratuitos reais.
+- **image_picker** para usar a câmera do celular.
+- **flutter_local_notifications** para notificações locais.
+- **share_plus** para compartilhamento nativo.
+- **http** para consumo de API externa.
 
-## Tecnologias Usadas
+## Organização do Código
 
-- **Flutter**: desenvolvimento do app mobile.
-- **Dart**: linguagem principal do app.
-- **Supabase Auth**: login e cadastro.
-- **Supabase Postgres**: persistência dos perfis, jogos e jogos salvos.
-- **Supabase Storage**: armazenamento da foto de perfil.
-- **Supabase Edge Functions**: backend da recomendação.
-- **FreeToGame API**: API externa com catálogo de jogos gratuitos.
-- **image_picker**: acesso à câmera do celular.
-- **flutter_local_notifications**: notificações locais.
-- **share_plus**: compartilhamento nativo.
-- **http**: chamadas HTTP para a FreeToGame API.
+O projeto foi organizado em algumas pastas principais para separar melhor as responsabilidades do app.
 
-## Requisitos da Ponderada
+### Models
 
-### Aplicativo mobile
+Os `models` representam os dados usados dentro do aplicativo. Eles servem para transformar os dados recebidos de APIs ou do Supabase em objetos Dart mais fáceis de usar nas telas.
 
-O projeto foi feito em Flutter e deve ser executado como app mobile, principalmente em Android/emulador.
+Alguns exemplos:
 
-### Mais de duas telas
+- `GameModel`: representa um jogo vindo da FreeToGame API.
+- `ProfileModel`: representa o perfil do usuário.
+- `GameToPlayModel`: representa a relação entre um usuário e um jogo salvo.
+- `GameRecommendationModel`: representa uma recomendação de jogo exibida na tela de recomendação.
 
-O app possui várias telas:
+Por exemplo, quando a FreeToGame API retorna um JSON de jogo, o app transforma esse JSON em um `GameModel`. Assim, nas telas, fica mais simples acessar campos como título, imagem, gênero, plataforma e link do jogo.
 
-- Login.
-- Cadastro.
-- Descobrir.
-- Jogos salvos.
-- Recomendação.
-- Perfil.
+### Services
 
-### Navegação funcional
+Os `services` concentram funcionalidades que conversam com APIs externas, recursos do celular ou serviços específicos.
 
-A navegação usa rotas internas e uma barra inferior com as abas principais:
+No projeto, os principais services são:
 
-- Descobrir.
-- Salvos.
-- Indicar.
-- Perfil.
+- `FreeToGameApiService`: busca os jogos gratuitos na FreeToGame API.
+- `AiRecommendationService`: chama a função de recomendação no Supabase.
+- `StorageService`: envia a foto de perfil para o Supabase Storage.
+- `NotificationService`: mostra notificações locais quando um jogo é salvo.
+- `ShareService`: abre o compartilhamento nativo com o link do jogo.
 
-### Backend
+Essa separação evita que as telas fiquem responsáveis por detalhes técnicos como chamada HTTP, upload de imagem, notificação ou compartilhamento.
 
-O backend utilizado é o Supabase. Ele é usado para autenticação, banco de dados, storage e função server-side de recomendação.
+### Repositories
 
-### Persistência em banco de dados
+Os `repositories` organizam o acesso aos dados principais da aplicação, principalmente quando existe interação com o Supabase.
 
-Os jogos salvos ficam persistidos no Supabase. O app usa as tabelas:
+No projeto:
 
-- `profiles`
-- `games`
-- `games_to_play`
-- `recommendation_sessions`
+- `AuthRepository`: cuida de login, cadastro e logout.
+- `ProfileRepository`: busca e atualiza o perfil do usuário.
+- `GameRepository`: salva jogos, carrega jogos salvos e mantém o cache dos jogos na tabela `games`.
+- `RecommendationRepository`: estrutura preparada para sessões de recomendação.
 
-Na prática, os jogos são salvos assim:
+Um exemplo é o processo de salvar jogo. A tela não precisa saber todos os detalhes do banco. Ela chama o `GameRepository`, e ele faz o necessário para salvar o jogo na tabela `games` e criar a relação na tabela `games_to_play`.
 
-```text
-games
-= dados do jogo vindo da FreeToGame
+## Telas do Aplicativo
 
-games_to_play
-= relação entre usuário e jogo salvo
-```
+### Login
 
-### Consumo de API externa
+A tela de login permite que o usuário entre com uma conta existente. Ela usa o Supabase Auth para validar e autenticar o usuário.
 
-O app consome a FreeToGame API:
+### Cadastro
 
-```text
-https://www.freetogame.com/api/games
-```
+A tela de cadastro cria uma nova conta e também registra o perfil do usuário na tabela `profiles`.
 
-Ela é usada para listar os jogos gratuitos e também como base para a tela de recomendação.
+### Descobrir
 
-### Notificações
+A tela **Descobrir** mostra jogos gratuitos vindos da FreeToGame API. Nela o usuário pode visualizar jogos, filtrar por plataforma e categoria, salvar jogos e compartilhar o link de um jogo.
 
-Quando o usuário salva um jogo, o app dispara uma notificação local:
+Essa tela também possui estados de carregamento, erro e lista vazia.
 
-```text
-Jogo salvo
-{nome do jogo} foi adicionado aos seus jogos salvos.
-```
+### Jogos Salvos
 
-### Compartilhamento nativo
+A tela **Jogos salvos** mostra os jogos que o usuário salvou. Esses dados vêm do Supabase, usando a relação entre as tabelas `games_to_play` e `games`.
 
-Os cards dos jogos têm botão **Compartilhar**. Ele usa o pacote `share_plus` para abrir a folha nativa de compartilhamento do Android/iOS com o link do jogo.
+### Indicar
 
-O link usado é:
+A tela **Indicar** permite que o usuário escreva o tipo de jogo que quer encontrar. A aplicação envia esse texto para uma função no Supabase, e essa função se comunica com o Groq para retornar três jogos recomendados com base na lista da FreeToGame.
 
-```text
-game_url
-```
+Os jogos recomendados também podem ser salvos e compartilhados.
 
-ou, se não existir:
+### Perfil
 
-```text
-freetogame_profile_url
-```
+A tela **Perfil** mostra informações do usuário e permite tirar uma foto usando a câmera do celular. Essa foto é enviada para o Supabase Storage e a URL é salva no perfil.
 
-### Recurso de hardware mobile
 
-A tela de Perfil usa a câmera do celular para tirar uma foto de perfil.
-
-Fluxo:
-
-```text
-Usuário tira foto
--> app lê a imagem
--> envia para Supabase Storage
--> salva a URL em profiles.avatar_url
-```
-
-### Recomendação
-
-A tela de Recomendação permite que o usuário escreva o tipo de jogo que quer jogar.
-
-Exemplo:
-
-```text
-Quero um RPG tranquilo, com progressão e sem ser competitivo demais.
-```
-
-O Flutter chama uma Supabase Edge Function chamada:
-
-```text
-recommend-games
-```
-
-A função:
-
-1. Busca jogos populares da FreeToGame.
-2. Envia uma lista compacta de candidatos para um serviço externo de recomendação.
-3. Pede exatamente 3 recomendações.
-4. Retorna jogos reais da FreeToGame.
-5. O usuário pode salvar qualquer jogo recomendado.
-
-A recomendação não deve inventar jogos. Ela só retorna jogos presentes na lista enviada pela função.
-
-### Loading e erro
-
-As telas principais possuem estados de carregamento e erro:
-
-- login/cadastro;
-- listagem de jogos;
-- jogos salvos;
-- recomendação;
-- perfil/câmera.
-
-### UI organizada
-
-A UI foi feita com Material Design e textos em português. A estrutura foi separada em telas, serviços, modelos, repositórios e widgets.
-
-## Como Rodar o Projeto
-
-### 1. Pré-requisitos
-
-Instale:
-
-- Flutter.
-- Android Studio ou emulador Android.
-- Supabase CLI.
-- Conta/projeto Supabase.
-- Chave do serviço externo de recomendação.
-
-No Windows, se aparecer erro de symlink em plugins Flutter, ative o Developer Mode:
-
-```powershell
-start ms-settings:developers
-```
-
-### 2. Instalar dependências Flutter
-
-Entre na pasta do app:
-
-```powershell
-cd C:\Users\Bruno\Documents\ponderada_04\app
-flutter pub get
-```
-
-### 3. Configurar Supabase no Flutter
-
-O app lê as configurações por Dart defines:
-
-```text
-SUPABASE_URL
-SUPABASE_ANON_KEY
-```
-
-Rode assim:
-
-```powershell
-flutter run --dart-define=SUPABASE_URL=SUA_SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=SUA_SUPABASE_ANON_KEY
-```
-
-Para escolher dispositivo:
-
-```powershell
-flutter devices
-flutter run -d android --dart-define=SUPABASE_URL=SUA_SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=SUA_SUPABASE_ANON_KEY
-```
-
-### 4. Configurar a Edge Function de recomendação
-
-Na raiz do projeto:
-
-```powershell
-cd C:\Users\Bruno\Documents\ponderada_04
-```
-
-Faça login e link com o projeto Supabase:
-
-```powershell
-supabase login
-supabase link --project-ref SEU_PROJECT_REF
-```
-
-Configure os secrets da função de recomendação conforme o provedor usado no projeto:
-
-```powershell
-supabase secrets set RECOMMENDATION_API_KEY=SUA_CHAVE
-supabase secrets set RECOMMENDATION_MODEL=MODELO_USADO
-supabase secrets set RECOMMENDATION_API_URL=URL_DO_ENDPOINT_COMPATIVEL_COM_CHAT_COMPLETIONS
-```
-
-Faça deploy da função:
-
-```powershell
-supabase functions deploy recommend-games
-```
-
-### 5. Rodar validação básica
-
-Dentro de `app/`:
-
-```powershell
-flutter analyze --no-pub
-```
-
-## Estrutura Principal
-
-```text
-app/lib/
-  app/
-  core/
-  models/
-  repositories/
-  screens/
-  services/
-  widgets/
-
-supabase/functions/recommend-games/
-  index.ts
-```
-
-## Observações
-
-- Chaves de API não devem ser colocadas no código.
-- A chave do provedor de recomendação fica como secret da Supabase Edge Function.
-- A chave anônima do Supabase é usada pelo app via `--dart-define`.
-- A recomendação pode sofrer rate limit dependendo do plano do provedor configurado.
-- O app foi pensado como projeto universitário: simples, direto e funcional.
-
-## Checklist Final
-
-- [x] App mobile Flutter.
-- [x] Mais de duas telas.
-- [x] Navegação funcional.
-- [x] Backend com Supabase.
-- [x] Persistência em banco.
-- [x] API externa FreeToGame.
-- [x] Notificações locais.
-- [x] Compartilhamento nativo.
-- [x] Câmera como recurso de hardware.
-- [x] Recomendação.
-- [x] Loading e erro nas principais telas.
-- [x] UI em português.
-- [x] Documentação mínima.
-- [ ] Vídeo/demo da aplicação.
-- [ ] Repositório público no GitHub.
