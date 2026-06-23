@@ -41,7 +41,7 @@ class AppShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.auto_awesome_outlined),
             selectedIcon: Icon(Icons.auto_awesome),
-            label: 'AI',
+            label: 'Indicar',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

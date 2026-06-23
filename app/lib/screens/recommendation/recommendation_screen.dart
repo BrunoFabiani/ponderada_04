@@ -44,7 +44,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     }
 
     if (SupabaseConfig.url.isEmpty || SupabaseConfig.anonKey.isEmpty) {
-      showMessage('Configure o Supabase antes de usar recomendações com IA.');
+      showMessage('Configure o Supabase antes de usar recomendações.');
       return;
     }
 

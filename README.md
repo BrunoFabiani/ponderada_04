@@ -2,7 +2,7 @@
 
 Aplicativo mobile desenvolvido para a **Atividade Ponderada 4**. A proposta do app é ajudar pessoas a encontrarem jogos gratuitos para jogar, sem precisar pesquisar manualmente em vários sites.
 
-O app lista jogos free-to-play da FreeToGame API, permite salvar jogos em uma lista pessoal, usa câmera para foto de perfil, envia notificações locais, permite compartilhar links de jogos e usa uma função de IA para recomendar 3 jogos com base no texto do usuário.
+O app lista jogos free-to-play da FreeToGame API, permite salvar jogos em uma lista pessoal, usa câmera para foto de perfil, envia notificações locais, permite compartilhar links de jogos e possui uma tela de recomendação que sugere 3 jogos com base no texto do usuário.
 
 ## Ideia do App
 
@@ -20,7 +20,7 @@ A solução foi criar um app chamado **FreeGame Finder**, onde o usuário pode:
 - salvar jogos que quer testar depois;
 - receber notificação ao salvar um jogo;
 - tirar foto de perfil com a câmera;
-- pedir uma recomendação com IA;
+- pedir uma recomendação de jogos;
 - compartilhar o link de um jogo usando o compartilhamento nativo do celular.
 
 ## Tecnologias Usadas
@@ -30,9 +30,8 @@ A solução foi criar um app chamado **FreeGame Finder**, onde o usuário pode:
 - **Supabase Auth**: login e cadastro.
 - **Supabase Postgres**: persistência dos perfis, jogos e jogos salvos.
 - **Supabase Storage**: armazenamento da foto de perfil.
-- **Supabase Edge Functions**: backend da recomendação com IA.
+- **Supabase Edge Functions**: backend da recomendação.
 - **FreeToGame API**: API externa com catálogo de jogos gratuitos.
-- **Groq API**: modelo de IA usado na recomendação.
 - **image_picker**: acesso à câmera do celular.
 - **flutter_local_notifications**: notificações locais.
 - **share_plus**: compartilhamento nativo.
@@ -61,7 +60,7 @@ A navegação usa rotas internas e uma barra inferior com as abas principais:
 
 - Descobrir.
 - Salvos.
-- IA.
+- Indicar.
 - Perfil.
 
 ### Backend
@@ -95,7 +94,7 @@ O app consome a FreeToGame API:
 https://www.freetogame.com/api/games
 ```
 
-Ela é usada para listar os jogos gratuitos e também como base para a recomendação com IA.
+Ela é usada para listar os jogos gratuitos e também como base para a tela de recomendação.
 
 ### Notificações
 
@@ -135,7 +134,7 @@ Usuário tira foto
 -> salva a URL em profiles.avatar_url
 ```
 
-### IA / Recomendação
+### Recomendação
 
 A tela de Recomendação permite que o usuário escreva o tipo de jogo que quer jogar.
 
@@ -154,12 +153,12 @@ recommend-games
 A função:
 
 1. Busca jogos populares da FreeToGame.
-2. Envia uma lista compacta de candidatos para a Groq API.
+2. Envia uma lista compacta de candidatos para um serviço externo de recomendação.
 3. Pede exatamente 3 recomendações.
 4. Retorna jogos reais da FreeToGame.
 5. O usuário pode salvar qualquer jogo recomendado.
 
-A IA não deve inventar jogos. Ela só recomenda jogos presentes na lista enviada pela função.
+A recomendação não deve inventar jogos. Ela só retorna jogos presentes na lista enviada pela função.
 
 ### Loading e erro
 
@@ -185,7 +184,7 @@ Instale:
 - Android Studio ou emulador Android.
 - Supabase CLI.
 - Conta/projeto Supabase.
-- Chave da Groq API.
+- Chave do serviço externo de recomendação.
 
 No Windows, se aparecer erro de symlink em plugins Flutter, ative o Developer Mode:
 
@@ -224,7 +223,7 @@ flutter devices
 flutter run -d android --dart-define=SUPABASE_URL=SUA_SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=SUA_SUPABASE_ANON_KEY
 ```
 
-### 4. Configurar a Edge Function de IA
+### 4. Configurar a Edge Function de recomendação
 
 Na raiz do projeto:
 
@@ -239,11 +238,12 @@ supabase login
 supabase link --project-ref SEU_PROJECT_REF
 ```
 
-Configure os secrets:
+Configure os secrets da função de recomendação conforme o provedor usado no projeto:
 
 ```powershell
-supabase secrets set GROQ_API_KEY=SUA_CHAVE_GROQ
-supabase secrets set GROQ_MODEL=openai/gpt-oss-20b
+supabase secrets set RECOMMENDATION_API_KEY=SUA_CHAVE
+supabase secrets set RECOMMENDATION_MODEL=MODELO_USADO
+supabase secrets set RECOMMENDATION_API_URL=URL_DO_ENDPOINT_COMPATIVEL_COM_CHAT_COMPLETIONS
 ```
 
 Faça deploy da função:
@@ -278,10 +278,10 @@ supabase/functions/recommend-games/
 
 ## Observações
 
-- As chaves de API não devem ser colocadas no código.
-- A chave da Groq fica como secret da Supabase Edge Function.
+- Chaves de API não devem ser colocadas no código.
+- A chave do provedor de recomendação fica como secret da Supabase Edge Function.
 - A chave anônima do Supabase é usada pelo app via `--dart-define`.
-- A recomendação com IA pode sofrer rate limit dependendo do plano da Groq.
+- A recomendação pode sofrer rate limit dependendo do plano do provedor configurado.
 - O app foi pensado como projeto universitário: simples, direto e funcional.
 
 ## Checklist Final
@@ -295,7 +295,7 @@ supabase/functions/recommend-games/
 - [x] Notificações locais.
 - [x] Compartilhamento nativo.
 - [x] Câmera como recurso de hardware.
-- [x] Recomendação com IA.
+- [x] Recomendação.
 - [x] Loading e erro nas principais telas.
 - [x] UI em português.
 - [x] Documentação mínima.

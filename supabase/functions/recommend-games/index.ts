@@ -15,7 +15,7 @@ type FreeToGameGame = {
   freetogame_profile_url?: string;
 };
 
-type AiRecommendation = {
+type GameRecommendation = {
   game_id: number;
   reason: string;
 };
@@ -44,15 +44,27 @@ export default {
         return jsonResponse({ error: "Prompt is required." }, 400);
       }
 
-      const groqApiKey = Deno.env.get("GROQ_API_KEY");
-      if (!groqApiKey) {
-        return jsonResponse({ error: "Groq API key is not configured." }, 500);
+      const providerApiKey = getProviderApiKey();
+      if (!providerApiKey) {
+        return jsonResponse(
+          { error: "Recommendation provider key is not configured." },
+          500,
+        );
+      }
+
+      const providerUrl = getProviderUrl();
+      if (!providerUrl) {
+        return jsonResponse(
+          { error: "Recommendation provider URL is not configured." },
+          500,
+        );
       }
 
       const candidates = await fetchCandidateGames();
       const recommendations = await recommendGames({
-        groqApiKey,
-        model: Deno.env.get("GROQ_MODEL") ?? "openai/gpt-oss-20b",
+        providerApiKey,
+        model: getProviderModel(),
+        providerUrl: providerUrl,
         prompt: prompt.trim(),
         candidates,
       });
@@ -99,13 +111,15 @@ async function fetchCandidateGames(): Promise<FreeToGameGame[]> {
 }
 
 async function recommendGames({
-  groqApiKey,
+  providerApiKey,
   model,
+  providerUrl,
   prompt,
   candidates,
 }: {
-  groqApiKey: string;
+  providerApiKey: string;
   model: string;
+  providerUrl: string;
   prompt: string;
   candidates: FreeToGameGame[];
 }): Promise<AiRecommendation[]> {
@@ -117,58 +131,55 @@ async function recommendGames({
     short_description: game.short_description,
   }));
 
-  const response = await fetch(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${groqApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You recommend free-to-play games. Only recommend games from the candidate list. Do not invent games. Return exactly 3 recommendations.",
-          },
-          {
-            role: "user",
-            content: JSON.stringify({
-              user_preference: prompt,
-              candidate_games: compactGames,
-            }),
-          },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "game_recommendations",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              required: ["recommendations"],
-              properties: {
-                recommendations: {
-                  type: "array",
-                  minItems: 3,
-                  maxItems: 3,
-                  items: {
-                    type: "object",
-                    additionalProperties: false,
-                    required: ["game_id", "reason"],
-                    properties: {
-                      game_id: {
-                        type: "integer",
-                        description: "The id of a game from candidate_games.",
-                      },
-                      reason: {
-                        type: "string",
-                        description:
-                          "A short reason explaining why this game fits the user preference.",
-                      },
+  const response = await fetch(providerUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${providerApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You recommend free-to-play games. Only recommend games from the candidate list. Do not invent games. Return exactly 3 recommendations.",
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            user_preference: prompt,
+            candidate_games: compactGames,
+          }),
+        },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "game_recommendations",
+          strict: true,
+          schema: {
+            type: "object",
+            additionalProperties: false,
+            required: ["recommendations"],
+            properties: {
+              recommendations: {
+                type: "array",
+                minItems: 3,
+                maxItems: 3,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["game_id", "reason"],
+                  properties: {
+                    game_id: {
+                      type: "integer",
+                      description: "The id of a game from candidate_games.",
+                    },
+                    reason: {
+                      type: "string",
+                      description:
+                        "A short reason explaining why this game fits the user preference.",
                     },
                   },
                 },
@@ -176,27 +187,41 @@ async function recommendGames({
             },
           },
         },
-      }),
-    },
-  );
+      },
+    }),
+  });
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`Groq request failed: ${response.status} ${errorBody}`);
+    throw new Error(
+      `Recommendation request failed: ${response.status} ${errorBody}`,
+    );
   }
 
   const data = await response.json();
   const outputText = getChatCompletionText(data);
 
   if (typeof outputText !== "string") {
-    throw new Error("Groq response did not include message content.");
+    throw new Error("Recommendation response did not include message content.");
   }
 
   const parsed = JSON.parse(outputText) as {
-    recommendations: AiRecommendation[];
+    recommendations: GameRecommendation[];
   };
 
   return parsed.recommendations;
+}
+
+function getProviderApiKey(): string | undefined {
+  return Deno.env.get("RECOMMENDATION_API_KEY");
+}
+
+function getProviderModel(): string {
+  return Deno.env.get("RECOMMENDATION_MODEL") ?? "llama-3.3-70b-versatile";
+}
+
+function getProviderUrl(): string | undefined {
+  return Deno.env.get("RECOMMENDATION_API_URL");
 }
 
 function getChatCompletionText(data: unknown): string | null {
